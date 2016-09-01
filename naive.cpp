@@ -5,6 +5,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <vector>
 
 using namespace std;
 
@@ -14,8 +16,19 @@ int main(int argc, char *argv[]) {
     int N, D, index;
     infile >> N >> D;
 
+    // Read the Query from the query.txt file
+    string line1;
+    ifstream infile1("query.txt");
+    getline(infile1, line1);
+    stringstream ss1(line1);
+    vector<int> dims;
+    for(int i = 0; ss1 >> i; ) {
+        dims.push_back(i);
+    }
+
     // Create a Matrix for the data
     int **data = new int*[N];
+    bool *not_skyline = new bool[N];
 
     for (int i = 0; i < N; i++) {
         infile >> index;
@@ -30,39 +43,43 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Print the entire dataset on the console
-    // for (int i = 0; i < N; i++) {
-    //     for (int j = 0; j < D; j++) {
-    //         cout << data[i][j] << " ";
-    //     }
-    //     cout << endl;
-    // } 
-
     // Now let's find out the skylines in the dataset
+    int number_skylines = 0;
     for (int i = 0; i < N; i++) {
         // Compare data[i] with all the other datapoints
-        bool not_skyline = false;
+        not_skyline[i] = false;
         for (int j = 0; j < N; j++) {
             int worse = 0;
-            for (int k = 0; k < D; k++) {
-                if (data[i][k] > data[j][k]) {
+            for (vector<int>::iterator k = dims.begin(); k != dims.end(); ++k) {
+                if (data[i][*k - 1] > data[j][*k - 1]) {
                     worse += 1;
                 }
             }
-            if (worse == D) {
-                not_skyline = true;
-                cout << "[" << i+1 << "] beaten by [" << j+1 << "]" << endl;
+            if (worse == dims.size()) {
+                not_skyline[i] = true;
+                // cout << "[" << i+1 << "] beaten by [" << j+1 << "]" << endl;
                 break;
             }
         }
-        if (!not_skyline) {
+        if (!not_skyline[i]) {
             // This point was not dominated by any other point, so it is a skyline
-            cout << "[" << i+1 << "] is a Skyline" << endl;   
+            // cout << "[" << i+1 << "] is a Skyline" << endl; 
+            number_skylines += 1;  
         }
     }
 
-    
-
+    cout << "Total Number of Skyline Points: " << number_skylines << " out of " << N << endl;
+    cout << "Skyline Points: " << endl;
+    int printed = 0;
+    for (int i = 0; i < N; i++) {
+        if (!not_skyline[i]) {
+            cout << i+1 << "\t";
+            printed += 1;
+            if (printed % 10 == 0)
+                cout << endl;
+        }
+    }
+    cout << endl;
 
     return 0;
 }
