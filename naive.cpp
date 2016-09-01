@@ -43,6 +43,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // NAIVE ALGORITHM FOR SKYLINES
+    ////////////////////////////////////////////////////////////////////////////////////////
     // Now let's find out the skylines in the dataset
     int number_skylines = 0;
     for (int i = 0; i < N; i++) {
@@ -67,6 +69,7 @@ int main(int argc, char *argv[]) {
             number_skylines += 1;  
         }
     }
+    ////////////////////////////////////////////////////////////////////////////////////////
 
     cout << "Total Number of Skyline Points: " << number_skylines << " out of " << N << endl;
     cout << "Skyline Points: " << endl;
