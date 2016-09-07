@@ -104,7 +104,8 @@ int main(int argc, char *argv[]) {
             stupid_print(skyline_window);
 
             bool not_skyline = false;
-            for (list<point>::iterator swp = skyline_window.begin(); swp != skyline_window.end(); swp++) {
+            list<point>::iterator swp = skyline_window.begin();
+            while (swp != skyline_window.end()) {
                 int worse = 0;
                 int better_or_equal = 0;
                 for (vector<int>::iterator k = dims.begin(); k != dims.end(); ++k) {
@@ -121,8 +122,11 @@ int main(int argc, char *argv[]) {
                     // remove swp from the window
                     cout << "Removed " << (*swp).index << " from Skyline window" << endl;
                     swp = skyline_window.erase(swp);
+                    comparisons += 1;
+                    continue;
                 }
-                comparisons += 1;    
+                comparisons += 1; 
+                swp++;   
             }
             // if not_skyline is still false, try to insert this point in the skyline window
             if (!not_skyline) {
@@ -146,8 +150,9 @@ int main(int argc, char *argv[]) {
         // mark the skyline points
         list<point>::iterator swp = skyline_window.begin();
         while (swp != skyline_window.end()) {
+            cout << "Size of Skyline Window: " << skyline_window.size() << endl;
             if (skyline_window.size() > 0) {
-                if ((*swp).timestamp < (temp_data.front()).timestamp) {
+                if ((*swp).timestamp < (temp_data.front()).timestamp || temp_data.size() == 0) {
                     cout << "Removing " << swp->index << " from window as valid skyline" << endl;
                     if (swp->index <= N) {
                         skyline[(swp->index)-1] = true;
