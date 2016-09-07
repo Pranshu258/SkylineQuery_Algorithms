@@ -16,6 +16,14 @@ struct point {
     int index;
 };
 
+void stupid_print (list<point> data) {
+    for (list<point>::iterator p = data.begin(); p != data.end(); p++) {
+        cout << (*p).index << " ";
+    }
+    cout << endl;
+    return;
+}
+
 int main(int argc, char *argv[]) {
     
     clock_t begin = clock();
@@ -50,10 +58,13 @@ int main(int argc, char *argv[]) {
         if (index == i+1) {
             // Read the dimensions now and put them in the vector
             point *p = new point;
+            p->attributes = new int[D];
             for (int j = 0; j < D; j++) {
-                infile >> p->attributes[j];
+                int val;
+                infile >> val;
+                p->attributes[j] = val;
             }
-            p->timestamp = 0;
+            p->timestamp = N*N;
             p->index = index;
             data.push_back(*p);
             original_data.push_back(*p);
@@ -83,7 +94,15 @@ int main(int argc, char *argv[]) {
     list<point> skyline_window;
     while (!data.empty()) {
         list<point> temp_data;
+
+        cout << "Data: " << endl;
+        stupid_print(data);
+
         for (list<point>::iterator p = data.begin(); p != data.end(); p++) {
+
+            cout << (*p).index << ". Skyline Window: " << endl;
+            stupid_print(skyline_window);
+
             bool not_skyline = false;
             for (list<point>::iterator swp = skyline_window.begin(); swp != skyline_window.end(); swp++) {
                 int worse = 0;
@@ -100,7 +119,8 @@ int main(int argc, char *argv[]) {
                 }
                 if (better_or_equal == dims.size()) {
                     // remove swp from the window
-                    skyline_window.erase(swp);
+                    cout << "Removed " << (*swp).index << " from Skyline window" << endl;
+                    swp = skyline_window.erase(swp);
                 }
                 comparisons += 1;    
             }
@@ -108,26 +128,47 @@ int main(int argc, char *argv[]) {
             if (!not_skyline) {
                 if (skyline_window.size() < win_size) {
                     // get the timestamp and push in the skyline data
-                    clock_t now = clock();
-                    (*p).timestamp = double(now - begin) / CLOCKS_PER_SEC;
+                    (*p).timestamp = comparisons;
                     skyline_window.push_back(*p);
+                    cout << "Inserted " << (*p).index << " in Skyline window. Time: " << (*p).timestamp << endl;
                 }
                 else {
                     // get the timestamp and put in the temp data
-                    clock_t now = clock();
-                    (*p).timestamp = double(now - begin) / CLOCKS_PER_SEC;
+                    (*p).timestamp = comparisons;
                     temp_data.push_back(*p);
+                    cout << "Inserted " << (*p).index << " in temp_data. Time: " << (*p).timestamp << endl;
                 }
             }
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         // mark the skyline points
         list<point>::iterator swp = skyline_window.begin();
-        while (swp != skyline_window.end() && swp->timestamp < (temp_data.front()).timestamp) {
-            skyline[(swp->index)-1] = true;
-            skyline_window.erase(swp);
-        }
+        while (swp != skyline_window.end()) {
+            if (skyline_window.size() > 0) {
+                if ((*swp).timestamp < (temp_data.front()).timestamp) {
+                    cout << "Removing " << swp->index << " from window as valid skyline" << endl;
+                    if (swp->index <= N) {
+                        skyline[(swp->index)-1] = true;
+                        swp = skyline_window.erase(swp);
+                        continue;
+                    } else {
+                        cout << "Something went wrong" << endl;
+                    }
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+            swp++;
+        }        
+
+        cout << "-------------------------------------------" << endl;
+
         data = temp_data;
+        temp_data.clear();
     }
 
 
