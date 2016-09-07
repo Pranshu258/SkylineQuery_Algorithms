@@ -6,9 +6,13 @@
 #include <sstream>
 #include <vector>
 #include <ctime>
+#include <cmath>
 #include <list>
 
 using namespace std;
+
+vector<int> dims;
+int N, D;
 
 struct point {
 	int* attributes;
@@ -17,11 +21,23 @@ struct point {
 };
 
 void stupid_print (list<point> data) {
-    for (list<point>::iterator p = data.begin(); p != data.end(); p++) {
+    for (list<point>::iterator p = data.begin(); p != data.end(); p++) {      
         cout << (*p).index << " ";
     }
     cout << endl;
     return;
+}
+
+// implement the custom sort function here
+bool compare_points(const point &p1, const point &p2) {
+    // find the entropy of both the functions
+    double e1 = 0, e2 = 0;
+    for (int k = 0; k < D; k++) {
+        e1 += log(p1.attributes[k] + 1);
+        e2 += log(p2.attributes[k] + 1);
+    }
+    //cout << e1 << " " << e2 << endl;
+    return e1 < e2;
 }
 
 int main(int argc, char *argv[]) {
@@ -30,7 +46,7 @@ int main(int argc, char *argv[]) {
 
     // Input file: data.txt
     ifstream infile("data.txt");
-    int N, D, index, win_size;
+    int index, win_size;
     infile >> N >> D;
 
     ifstream infile1("query.txt");
@@ -39,7 +55,7 @@ int main(int argc, char *argv[]) {
     // Read the Query Dimensions from the query.txt file
     getline(infile1, line1);
     stringstream ss1(line1);
-    vector<int> dims;
+
     for(int i = 0; ss1 >> i; ) {
         dims.push_back(i);
     }
@@ -74,18 +90,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Print the Data
-    // int c = 1;
-    // for (list<point>::iterator p = data.begin(); p != data.end(); p++) {
-    //     // *p contains the current point
-    //     cout << "[" << c << "]: "; 
-    //     for (vector<int>::iterator v = (*p).attributes.begin(); v != (*p).attributes.end(); v++) {
-    //         cout << *v << " ";
-    //     }
-    //     cout << endl;
-    //     c++;
-    // }
-
+    //stupid_print(data);
+    data.sort(&compare_points);
+    //stupid_print(data);
 
     // BLOCK NESTED LOOP ALGORITHM FOR SKYLINES
     //////////////////////////////////////////////////////////////////////////////
