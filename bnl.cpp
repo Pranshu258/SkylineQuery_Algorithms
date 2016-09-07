@@ -107,20 +107,20 @@ int main(int argc, char *argv[]) {
             list<point>::iterator swp = skyline_window.begin();
             while (swp != skyline_window.end()) {
                 int worse = 0;
-                int better_or_equal = 0;
+                int better = 0;
                 for (vector<int>::iterator k = dims.begin(); k != dims.end(); ++k) {
                     if ((*p).attributes[*k - 1] > (*swp).attributes[*k - 1]) {
                         worse += 1;
-                    } else {
-                        better_or_equal += 1;
+                    } else if ((*p).attributes[*k - 1] < (*swp).attributes[*k - 1]){
+                        better += 1;
                     }
                 }
                 if (worse == dims.size()) {
                     not_skyline = true;
                 }
-                if (better_or_equal == dims.size()) {
+                if (better == dims.size()) {
                     // remove swp from the window
-                    cout << "Removed " << (*swp).index << " from Skyline window" << endl;
+                    cout << "Removed " << (*swp).index << " from Skyline window, dominated by: " << (*p).index << endl;
                     swp = skyline_window.erase(swp);
                     comparisons += 1;
                     continue;
@@ -190,6 +190,8 @@ int main(int argc, char *argv[]) {
         }
     }
     cout << endl;
+
+    cout << "Number of comparisons: " << comparisons << endl;
 
     return 0;
 }
