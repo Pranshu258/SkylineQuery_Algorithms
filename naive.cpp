@@ -71,7 +71,6 @@ int main(int argc, char *argv[]) {
     }
     ////////////////////////////////////////////////////////////////////////////////////////
 
-    cout << "Total Number of Skyline Points: " << number_skylines << " out of " << N << endl;
     cout << "Skyline Points: " << endl;
     int printed = 0;
     for (int i = 0; i < N; i++) {
@@ -83,6 +82,7 @@ int main(int argc, char *argv[]) {
         }
     }
     cout << endl;
-
+    cout << "Number of skyline points: " << printed << endl;
+    cout << "Number of comparisons: " << N*N << endl;
     return 0;
 }

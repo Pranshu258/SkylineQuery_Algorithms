@@ -1,4 +1,4 @@
-// Implements the Block Nested Loop Algorithm for Skyline Queries
+// Implements the B+ Tree Algorithm for Skyline Queries
 // Author: Pranshu Gupta
 
 #include <iostream>
@@ -6,33 +6,43 @@
 #include <sstream>
 #include <vector>
 #include <ctime>
-#include <cmath>
 #include <list>
+#include <limits>
 
 using namespace std;
 
-vector<int> dims;
-int N, D;
-
 struct point {
-	int* attributes;
-	double timestamp;
+    int* attributes;
+    double timestamp;
     int index;
-    int bindex;
+    double bindex;
 };
 
-void stupid_print (list<point> data) {
-    for (list<point>::iterator p = data.begin(); p != data.end(); p++) {      
-        cout << (*p).index << " ";
-    }
-    cout << endl;
-    return;
-}
+vector<int> dims;
+int N, D;
 
 // implement the custom sort function here
 bool compare_points(const point &p1, const point &p2) {
     return p1.bindex < p2.bindex;
 }
+
+// Function to update w for the skyline window
+double updatew(list<point> window) {
+    double w = numeric_limits<double>::infinity();
+    for (list<point>::iterator p = window.begin(); p != window.end(); p++) {
+        double m = 0;
+        for (vector<int>::iterator k = dims.begin(); k != dims.end(); ++k) {
+            if (m < (*p).attributes[*k - 1]) {
+                m = (*p).attributes[*k - 1];
+            }
+        }
+        if (w > m) {
+            w = m;
+        }
+    }
+    return w;
+}
+
 
 int main(int argc, char *argv[]) {
     
@@ -76,11 +86,17 @@ int main(int argc, char *argv[]) {
             }
             p->timestamp = N*N;
             p->index = index;
+            p->bindex = numeric_limits<double>::infinity();
+            for (vector<int>::iterator k = dims.begin(); k != dims.end(); ++k) {
+                if (p->bindex > (*p).attributes[*k - 1]) {
+                    p->bindex = (*p).attributes[*k - 1];
+                }
+            }
             data.push_back(*p);
             original_data.push_back(*p);
         } else {
             cout << "Invalid Data" << endl;
-            exit(0);    		
+            exit(0);            
         }
     }
 
@@ -88,61 +104,61 @@ int main(int argc, char *argv[]) {
     data.sort(&compare_points);
     //stupid_print(data);
 
-    // BLOCK NESTED LOOP ALGORITHM FOR SKYLINES
-    //////////////////////////////////////////////////////////////////////////////
-    // NOW WE CAN START FINDING THE SKYLINES
-    int comparisons = 0;;
+    /////////////////////////////////////////////////////////////////////////////////////////
+    // B+ TREE ALGORITHMM BEGINS NOW
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    int comparisons = 0;
+    double w = numeric_limits<double>::infinity();
     list<point> skyline_window;
     while (!data.empty()) {
         list<point> temp_data;
 
-        //cout << "Data: " << endl;
-        //stupid_print(data);
-
         for (list<point>::iterator p = data.begin(); p != data.end(); p++) {
-
-            //cout << (*p).index << ". Skyline Window: " << endl;
-            //stupid_print(skyline_window);
-
-            bool not_skyline = false;
-            list<point>::iterator swp = skyline_window.begin();
-            while (swp != skyline_window.end()) {
-                int worse = 0;
-                int better = 0;
-                for (vector<int>::iterator k = dims.begin(); k != dims.end(); ++k) {
-                    if ((*p).attributes[*k - 1] > (*swp).attributes[*k - 1]) {
-                        worse += 1;
-                    } else if ((*p).attributes[*k - 1] < (*swp).attributes[*k - 1]){
-                        better += 1;
+            if (w >= p->bindex) {
+                bool not_skyline = false;
+                list<point>::iterator swp = skyline_window.begin();
+                while (swp != skyline_window.end()) {
+                    int worse = 0;
+                    int better = 0;
+                    for (vector<int>::iterator k = dims.begin(); k != dims.end(); ++k) {
+                        if ((*p).attributes[*k - 1] > (*swp).attributes[*k - 1]) {
+                            worse += 1;
+                        } else if ((*p).attributes[*k - 1] < (*swp).attributes[*k - 1]){
+                            better += 1;
+                        }
+                    }
+                    if (worse == dims.size()) {
+                        not_skyline = true;
+                    }
+                    if (better == dims.size()) {
+                        // remove swp from the window
+                        swp = skyline_window.erase(swp);
+                        // Update w here
+                        w = updatew(skyline_window);
+                        comparisons += 1;
+                        continue;
+                    }
+                    comparisons += 1; 
+                    swp++;   
+                }
+                // if not_skyline is still false, try to insert this point in the skyline window
+                if (!not_skyline) {
+                    if (skyline_window.size() < win_size) {
+                        // get the timestamp and push in the skyline data
+                        (*p).timestamp = comparisons;
+                        skyline_window.push_back(*p);
+                        // Update w here
+                        w = updatew(skyline_window);
+                    }
+                    else {
+                        // get the timestamp and put in the temp data
+                        (*p).timestamp = comparisons;
+                        temp_data.push_back(*p);
                     }
                 }
-                if (worse == dims.size()) {
-                    not_skyline = true;
-                }
-                if (better == dims.size()) {
-                    // remove swp from the window
-                    //cout << "Removed " << (*swp).index << " from Skyline window, dominated by: " << (*p).index << endl;
-                    swp = skyline_window.erase(swp);
-                    comparisons += 1;
-                    continue;
-                }
-                comparisons += 1; 
-                swp++;   
-            }
-            // if not_skyline is still false, try to insert this point in the skyline window
-            if (!not_skyline) {
-                if (skyline_window.size() < win_size) {
-                    // get the timestamp and push in the skyline data
-                    (*p).timestamp = comparisons;
-                    skyline_window.push_back(*p);
-                    //cout << "Inserted " << (*p).index << " in Skyline window. Time: " << (*p).timestamp << endl;
-                }
-                else {
-                    // get the timestamp and put in the temp data
-                    (*p).timestamp = comparisons;
-                    temp_data.push_back(*p);
-                    //cout << "Inserted " << (*p).index << " in temp_data. Time: " << (*p).timestamp << endl;
-                }
+            } else {
+                break;
             }
         }
 
@@ -158,6 +174,9 @@ int main(int argc, char *argv[]) {
                     if (swp->index <= N) {
                         skyline[(swp->index)-1] = true;
                         swp = skyline_window.erase(swp);
+                        // Update w here
+                        w = updatew(skyline_window);
+
                         continue;
                     } else {
                         cout << "Something went wrong" << endl;
