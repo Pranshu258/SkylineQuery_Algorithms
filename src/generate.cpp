@@ -34,7 +34,7 @@ int main (int argc, char *argv[]) {
 
     // Create the Data
     ofstream inputFile;
-    inputFile.open ("data.txt");
+    inputFile.open ("../data/data.txt");
     inputFile << N << "\t" << D << endl;
     for (int i = 0; i < N; i++) {
         inputFile << i+1 << "\t" ;

@@ -12,13 +12,13 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
     // Input file: data.txt
-    ifstream infile("data.txt");
+    ifstream infile("../data/data.txt");
     int N, D, index;
     infile >> N >> D;
 
     // Read the Query from the query.txt file
     string line1;
-    ifstream infile1("query.txt");
+    ifstream infile1("../data/query.txt");
     getline(infile1, line1);
     stringstream ss1(line1);
     vector<int> dims;
@@ -51,13 +51,16 @@ int main(int argc, char *argv[]) {
         // Compare data[i] with all the other datapoints
         not_skyline[i] = false;
         for (int j = 0; j < N; j++) {
-            int worse = 0;
+            int worse = 0, equalorworse = 0;
             for (vector<int>::iterator k = dims.begin(); k != dims.end(); ++k) {
                 if (data[i][*k - 1] > data[j][*k - 1]) {
                     worse += 1;
                 }
+                if (data[i][*k - 1] >= data[j][*k - 1]) {
+                    equalorworse += 1;
+                }
             }
-            if (worse == dims.size()) {
+            if (equalorworse == dims.size() && worse > 0) {
                 not_skyline[i] = true;
                 // cout << "[" << i+1 << "] beaten by [" << j+1 << "]" << endl;
                 break;
