@@ -1,4 +1,4 @@
-// Implements the Block Nested Loop Algorithm for Skyline Queries
+// Implementation of Aggregation like Algorithm for Skyline Queries
 // Author: Pranshu Gupta
 
 #include <iostream>
@@ -6,9 +6,14 @@
 #include <sstream>
 #include <vector>
 #include <ctime>
+#include <cmath>
 #include <list>
 
 using namespace std;
+
+// Some functions and global data
+vector<int> dims;
+int N, D, curr_dim;
 
 struct point {
 	int* attributes;
@@ -17,20 +22,26 @@ struct point {
 };
 
 void stupid_print (list<point> data) {
-	for (list<point>::iterator p = data.begin(); p != data.end(); p++) {
+	for (list<point>::iterator p = data.begin(); p != data.end(); p++) {	  
 		cout << (*p).index << " ";
 	}
 	cout << endl;
 	return;
 }
 
+// implement the custom sort function here
+bool compare_points(const point &p1, const point &p2) {
+	return p1.attributes[curr_dim] < p2.attributes[curr_dim];
+}
+
+// Here goes the main program
 int main(int argc, char *argv[]) {
 	
 	clock_t begin = clock();
 
 	// Input file: data.txt
 	ifstream infile("../data/data.txt");
-	int N, D, index, win_size;
+	int index, win_size;
 	infile >> N >> D;
 
 	ifstream infile1("../data/query.txt");
@@ -39,7 +50,7 @@ int main(int argc, char *argv[]) {
 	// Read the Query Dimensions from the query.txt file
 	getline(infile1, line1);
 	stringstream ss1(line1);
-	vector<int> dims;
+
 	for(int i = 0; ss1 >> i; ) {
 		dims.push_back(i);
 	}
@@ -74,31 +85,55 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	// Print the Data
-	// int c = 1;
-	// for (list<point>::iterator p = data.begin(); p != data.end(); p++) {
-	//	 // *p contains the current point
-	//	 cout << "[" << c << "]: "; 
-	//	 for (vector<int>::iterator v = (*p).attributes.begin(); v != (*p).attributes.end(); v++) {
-	//		 cout << *v << " ";
-	//	 }
-	//	 cout << endl;
-	//	 c++;
-	// }
+	// All the input data has been read and is there in original_data and the data lists
+	// Let's start the aggregation like process
+
+	// Get the dimension wise sorted lists
+	list<list<point>> cycle_data;
+	for (vector<int>::iterator k = dims.begin(); k != dims.end(); ++k) {
+		curr_dim = *k - 1;
+		data.sort(&compare_points);
+		cycle_data.push_back(data);
+		data = original_data;
+	}
+
+	list<point> bnl_data;
+	int * seen = new int[N];
+	// Cycle through the cycle_data list
+	bool none_fully_seen = true;
+	while (none_fully_seen) {
+		for (list<list<point>>::iterator dim_list = cycle_data.begin(); dim_list != cycle_data.end(); ++dim_list) {
+			// Get the first element and increment its seen count
+			point p = (*dim_list).front();
+			(*dim_list).pop_front();
+			int ind = p.index;
+			seen[ind] += 1;
+			// If seeing for the first time, insert the point in the bnl_data
+			if (seen[ind] == 1) {
+				bnl_data.push_back(p);
+			} else if (seen[ind] == dims.size()) {
+				// We have fully seen a point, points that have still not been inserted in bnl_data are irrelevalent
+				none_fully_seen = false;
+				break;
+			}
+		}
+	}
 
 
+	// Now we can apply BNL on bnl_data list
 	// BLOCK NESTED LOOP ALGORITHM FOR SKYLINES
 	//////////////////////////////////////////////////////////////////////////////
 	// NOW WE CAN START FINDING THE SKYLINES
 	int comparisons = 0;;
 	list<point> skyline_window;
-	while (!data.empty()) {
+	while (!bnl_data.empty()) {
 		list<point> temp_data;
 
 		//cout << "Data: " << endl;
 		//stupid_print(data);
 
-		for (list<point>::iterator p = data.begin(); p != data.end(); p++) {
+		for (list<point>::iterator p = bnl_data.begin(); p != bnl_data.end(); p++) {
+
 			bool not_skyline = false;
 			list<point>::iterator swp = skyline_window.begin();
 			while (swp != skyline_window.end()) {
@@ -126,8 +161,7 @@ int main(int argc, char *argv[]) {
 				}
 				comparisons += 1; 
 				swp++;
-			}				
-
+			}   
 			// if not_skyline is still false, try to insert this point in the skyline window
 			if (!not_skyline) {
 				if (skyline_window.size() < win_size) {
@@ -147,8 +181,6 @@ int main(int argc, char *argv[]) {
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		//stupid_print(skyline_window);
-		
 		// mark the skyline points
 		list<point>::iterator swp = skyline_window.begin();
 		while (swp != skyline_window.end()) {
@@ -172,10 +204,9 @@ int main(int argc, char *argv[]) {
 			swp++;
 		}		
 
-
 		//cout << "-------------------------------------------" << endl;
-		
-		data = temp_data;
+
+		bnl_data = temp_data;
 		temp_data.clear();
 	}
 

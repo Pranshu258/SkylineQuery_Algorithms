@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 			}
 			if (equalorworse == dims.size() && worse > 0) {
 				not_skyline[i] = true;
-				// cout << "[" << i+1 << "] beaten by [" << j+1 << "]" << endl;
+				//cout << "[" << i+1 << "] beaten by [" << j+1 << "]" << endl;
 				break;
 			}
 		}
