@@ -8,8 +8,10 @@
 #include <ctime>
 #include <cmath>
 #include <list>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
 vector<int> dims;
 int N, D;
@@ -41,8 +43,6 @@ bool compare_points(const point &p1, const point &p2) {
 }
 
 int main(int argc, char *argv[]) {
-	
-	clock_t begin = clock();
 
 	// Input file: data.txt
 	ifstream infile("../data/data.txt");
@@ -90,6 +90,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 	//stupid_print(data);
 	data.sort(&compare_points);
 	//stupid_print(data);
@@ -186,6 +187,9 @@ int main(int argc, char *argv[]) {
 
 	/////////////////////////////////////////////////////////////////////////////
 
+	high_resolution_clock::time_point t2 = high_resolution_clock::now();
+	duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+
 	cout << "Skyline Points: " << endl;
 	int printed = 0;
 	for (int i = 0; i < N; i++) {
@@ -199,6 +203,7 @@ int main(int argc, char *argv[]) {
 	cout << endl;
 	cout << "Number of skyline points: " << printed << endl;
 	cout << "Number of comparisons: " << comparisons << endl;
+	cout << "Time taken: " << time_span.count() << " seconds" << endl;
 
 	return 0;
 }

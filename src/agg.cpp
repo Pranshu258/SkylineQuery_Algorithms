@@ -8,8 +8,10 @@
 #include <ctime>
 #include <cmath>
 #include <list>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
 // Some functions and global data
 vector<int> dims;
@@ -36,8 +38,6 @@ bool compare_points(const point &p1, const point &p2) {
 
 // Here goes the main program
 int main(int argc, char *argv[]) {
-	
-	clock_t begin = clock();
 
 	// Input file: data.txt
 	ifstream infile("../data/data.txt");
@@ -87,6 +87,7 @@ int main(int argc, char *argv[]) {
 
 	// All the input data has been read and is there in original_data and the data lists
 	// Let's start the aggregation like process
+	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
 	// Get the dimension wise sorted lists
 	list<list<point>> cycle_data;
@@ -98,6 +99,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	list<point> bnl_data;
+	point finisher;
 	int * seen = new int[N];
 	// Cycle through the cycle_data list
 	bool none_fully_seen = true;
@@ -107,18 +109,38 @@ int main(int argc, char *argv[]) {
 			point p = (*dim_list).front();
 			(*dim_list).pop_front();
 			int ind = p.index;
-			seen[ind] += 1;
+			seen[ind-1] += 1;
 			// If seeing for the first time, insert the point in the bnl_data
-			if (seen[ind] == 1) {
+			if (seen[ind-1] == 1) {
 				bnl_data.push_back(p);
-			} else if (seen[ind] == dims.size()) {
+			} else if (seen[ind-1] == dims.size()) {
 				// We have fully seen a point, points that have still not been inserted in bnl_data are irrelevalent
+				finisher = p;
 				none_fully_seen = false;
 				break;
 			}
 		}
 	}
 
+
+	list<point> additional;
+	// Find other points that are equal to the points in bnl_data to take care of non-dvc cases
+	for (list<point>::iterator q = original_data.begin(); q != original_data.end(); q++) {
+		if (finisher.index != q->index) {
+			int equal = 0;
+			for (vector<int>::iterator k = dims.begin(); k != dims.end(); ++k) {
+				if (finisher.attributes[*k - 1] == q->attributes[*k - 1]) {
+					equal += 1;
+				}
+			}
+			if (equal == dims.size()) {
+				additional.push_back(*q);
+			}
+		}
+	}
+	for (list<point>::iterator p = additional.begin(); p != additional.end(); p++) {
+		bnl_data.push_back(*p);
+	}
 
 	// Now we can apply BNL on bnl_data list
 	// BLOCK NESTED LOOP ALGORITHM FOR SKYLINES
@@ -213,6 +235,9 @@ int main(int argc, char *argv[]) {
 
 	/////////////////////////////////////////////////////////////////////////////
 
+	high_resolution_clock::time_point t2 = high_resolution_clock::now();
+	duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+
 	cout << "Skyline Points: " << endl;
 	int printed = 0;
 	for (int i = 0; i < N; i++) {
@@ -226,6 +251,7 @@ int main(int argc, char *argv[]) {
 	cout << endl;
 	cout << "Number of skyline points: " << printed << endl;
 	cout << "Number of comparisons: " << comparisons << endl;
+	cout << "Time taken: " << time_span.count() << " seconds" << endl;
 
 	return 0;
 }

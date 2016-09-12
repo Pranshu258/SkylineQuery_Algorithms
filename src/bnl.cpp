@@ -7,8 +7,10 @@
 #include <vector>
 #include <ctime>
 #include <list>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
 struct point {
 	int* attributes;
@@ -25,8 +27,6 @@ void stupid_print (list<point> data) {
 }
 
 int main(int argc, char *argv[]) {
-	
-	clock_t begin = clock();
 
 	// Input file: data.txt
 	ifstream infile("../data/data.txt");
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 	//	 c++;
 	// }
 
-
+	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 	// BLOCK NESTED LOOP ALGORITHM FOR SKYLINES
 	//////////////////////////////////////////////////////////////////////////////
 	// NOW WE CAN START FINDING THE SKYLINES
@@ -182,6 +182,9 @@ int main(int argc, char *argv[]) {
 
 	/////////////////////////////////////////////////////////////////////////////
 
+	high_resolution_clock::time_point t2 = high_resolution_clock::now();
+	duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+
 	cout << "Skyline Points: " << endl;
 	int printed = 0;
 	for (int i = 0; i < N; i++) {
@@ -195,6 +198,7 @@ int main(int argc, char *argv[]) {
 	cout << endl;
 	cout << "Number of skyline points: " << printed << endl;
 	cout << "Number of comparisons: " << comparisons << endl;
+	cout << "Time taken: " << time_span.count() << " seconds" << endl;
 
 	return 0;
 }
