@@ -27,13 +27,17 @@ void stupid_print (list<point> data) {
 }
 
 int main(int argc, char *argv[]) {
-
+	if (argc != 3) {
+		cout << "Usage: ./bnl data query" << endl;
+		exit(0);
+	}
+	
 	// Input file: data.txt
-	ifstream infile("../data/data.txt");
+	ifstream infile(argv[1]);
 	int N, D, index, win_size;
 	infile >> N >> D;
 
-	ifstream infile1("../data/query.txt");
+	ifstream infile1(argv[2]);
 	string line1, line2;
 
 	// Read the Query Dimensions from the query.txt file

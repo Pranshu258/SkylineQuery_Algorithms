@@ -39,12 +39,17 @@ bool compare_points(const point &p1, const point &p2) {
 // Here goes the main program
 int main(int argc, char *argv[]) {
 
+	if (argc != 3) {
+		cout << "Usage: ./bnl data query" << endl;
+		exit(0);
+	}
+	
 	// Input file: data.txt
-	ifstream infile("../data/data.txt");
-	int index, win_size;
+	ifstream infile(argv[1]);
+	int N, D, index, win_size;
 	infile >> N >> D;
 
-	ifstream infile1("../data/query.txt");
+	ifstream infile1(argv[2]);
 	string line1, line2;
 
 	// Read the Query Dimensions from the query.txt file
@@ -250,7 +255,7 @@ int main(int argc, char *argv[]) {
 	}
 	cout << endl;
 	cout << "Number of skyline points: " << printed << endl;
-	cout << "Number of comparisons: " << comparisons << endl;
+	cout << "Number of comparisons: " << comparisons + N << endl;
 	cout << "Time taken: " << time_span.count() << " seconds" << endl;
 
 	return 0;
